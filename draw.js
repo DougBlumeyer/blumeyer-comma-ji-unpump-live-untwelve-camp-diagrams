@@ -88,16 +88,14 @@ function drawLine(pitch, otherPitch) {
 drawMainCircle();
 drawDiagram("o", ["a", "b", "c"]);
 
+function saveCanvas() {
+  var imageData = canvas.toDataURL('image/jpeg', 1);
+  var formData = new FormData();
+  formData.append('fileData', imageData);
+  var xhr = new XMLHttpRequest();
+  xhr.addEventListener('load', function () { alert('uploaded!'); });
+  xhr.open('POST', "/stuff/upload", true);
+  xhr.send(formData);
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
+saveCanvas();
