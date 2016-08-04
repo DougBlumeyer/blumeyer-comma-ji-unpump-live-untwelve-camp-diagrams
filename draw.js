@@ -1,7 +1,7 @@
 var canvas = document.getElementById("canvas");
 
-var windowWidth = 200;
-var windowHeight = 200;
+var windowWidth = 250;
+var windowHeight = 250;
 
 canvas.width  = windowWidth;
 canvas.height = windowHeight;
@@ -19,10 +19,12 @@ var r = 50;
 
 var pi = Math.PI;
 QUADRANT_SYMBOL_SIZE = 8;
-QUADRANT_RADIUS = 1.8;
-LABEL_RADIUS = 1.3;
 
-var pointSize = 4;
+CIRCLE_RADIUS = 1;
+LABEL_RADIUS = 1.5;
+QUADRANT_RADIUS = 2.1;
+POINT_SIZE = 8;
+OTHER_POINT_SIZE = 4;
 
 var voiceColors = {
 	"lead": "red",
@@ -44,10 +46,10 @@ function drawMainCircle() {
 	ctx.stroke();
 }
 
-function drawPoint(pitch) {
-	var point = getPoint(pitch);
+function drawPoint(pitch, size) {
+	var point = getPoint(pitch, CIRCLE_RADIUS);
   ctx.beginPath();
-  ctx.arc(point.x, point.y, pointSize, 0, 2 * pi);
+  ctx.arc(point.x, point.y, size, 0, 2 * pi);
   ctx.fill();
 }
 
@@ -56,11 +58,11 @@ function drawIntervalLabel(pitch, intervalLabel) {
 	ctx.fillText(intervalLabel, textPoint.x, textPoint.y + 5);
 }
 
-function getPoint(pitch, scale = 1) {
+function getPoint(pitch, radiusScalar) {
 	var angle = mapCentsToRadians(pitch);
   return {
-   	x: circleCenter.x + r * Math.cos(angle - .3) * scale,
-   	y: circleCenter.y + r * Math.sin(angle - .3) * scale
+   	x: circleCenter.x + r * Math.cos(angle) * radiusScalar,
+   	y: circleCenter.y + r * Math.sin(angle) * radiusScalar
   };
 }
 
@@ -126,7 +128,7 @@ var mapOfCentsToInterval = {
 
 function drawDiagram(pitchId, otherVoices) {
 	var pitch = pitchIdToCentsMap[pitchId.class] + pitchId.octave * 1200;
-	drawPoint(pitch);
+	drawPoint(pitch, POINT_SIZE);
 
 	Object.keys(otherVoices).forEach(function(otherVoice) {
 		var otherPitchObj = otherVoices[otherVoice];
@@ -138,14 +140,14 @@ function drawDiagram(pitchId, otherVoices) {
 			drawIntervalLabel(otherPitch, intervalLabel);
 			drawQuadrant(otherPitch, voiceQuadrants[otherVoice])
 			drawLine(pitch, otherPitch);
-			drawPoint(otherPitch);
+			drawPoint(otherPitch, OTHER_POINT_SIZE);
 		}
 	});
 }
 
 function drawLine(pitch, otherPitch) {
-	var point = getPoint(pitch);
-	var otherPoint = getPoint(otherPitch);
+	var point = getPoint(pitch, CIRCLE_RADIUS);
+	var otherPoint = getPoint(otherPitch, CIRCLE_RADIUS);
 
 	ctx.moveTo(point.x, point.y);
 	ctx.lineTo(otherPoint.x, otherPoint.y);
