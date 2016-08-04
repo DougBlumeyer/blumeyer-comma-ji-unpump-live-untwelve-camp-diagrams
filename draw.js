@@ -6,14 +6,14 @@ var windowHeight = 200;
 canvas.width  = windowWidth;
 canvas.height = windowHeight;
 
-var circleCenterX = windowWidth / 2;
-var circleCenterY = windowHeight / 2;
+var circleCenter = {
+	x: windowWidth / 2,
+	y: windowHeight / 2
+};
 
 var ctx = canvas.getContext("2d");
 ctx.font = "16px Georgia";
 ctx.textAlign = "center";
-ctx.strokeStyle = "black";
-ctx.fillStyle = "black";
 
 var r = 60;
 
@@ -28,9 +28,16 @@ var voiceColors = {
 	"bass": "brown"
 }
 
+var voiceQuadrants = {
+	"lead" : 1,
+	"harm1": 2,
+	"harm2": 3,
+	"bass": 4
+}
+
 function drawMainCircle() {
 	ctx.beginPath();
-	ctx.arc(circleCenterX, circleCenterY, r, 0, 2 * pi);
+	ctx.arc(circleCenter.x, circleCenter.y, r, 0, 2 * pi);
 	ctx.stroke();
 }
 
@@ -49,8 +56,8 @@ function drawIntervalLabel(pitch, intervalLabel) {
 function getPoint(pitch, scale = 1) {
 	var angle = mapCentsToRadians(pitch);
   return {
-   	x: circleCenterX + r * Math.cos(angle - .3) * scale,
-   	y: circleCenterY + r * Math.sin(angle - .3) * scale
+   	x: circleCenter.x + r * Math.cos(angle - .3) * scale,
+   	y: circleCenter.y + r * Math.sin(angle - .3) * scale
   };
 }
 
@@ -115,8 +122,6 @@ var mapOfCentsToInterval = {
 }
 
 function drawDiagram(pitchId, otherVoices) {
-	ctx.strokeStyle = "black";
-	ctx.fillStyle = "black";
 	var pitch = pitchIdToCentsMap[pitchId.class] + pitchId.octave * 1200;
 	drawPoint(pitch);
 
@@ -127,9 +132,8 @@ function drawDiagram(pitchId, otherVoices) {
 		var pitchDifferenceAsString = pitchDifference.toString();
 		var intervalLabel = mapOfCentsToInterval[pitchDifferenceAsString];
 		if (intervalLabel) {
-			ctx.strokeStyle = voiceColors[otherVoice];
-			ctx.fillStyle = voiceColors[otherVoice];
 			drawIntervalLabel(otherPitch, intervalLabel);
+			drawQuadrant(otherPitch, voiceQuadrants[otherVoice])
 			drawLine(pitch, otherPitch);
 			drawPoint(otherPitch);
 		}
@@ -186,9 +190,6 @@ song.forEach(function(beat, beatIndex) {
 		var otherVoices = JSON.parse(JSON.stringify(beat));
 		delete otherVoices[voiceName];
 
-		console.log(voice)
-		console.log(otherVoices)
-
 		reset();
 
 		drawDiagram(voice, otherVoices);
@@ -202,4 +203,18 @@ function beatName(beatIndex) {
 	var measureNumber = 1 + Math.floor(beatIndex / 4);
 	var beatNumber = 1 + beatIndex % 4;
 	return measureNumber + "." + beatNumber;
+}
+
+function drawQuadrant(pitch, which) {
+	var quadrantPoint = getPoint(pitch, 1.5);
+
+	ctx.beginPath();
+	ctx.arc(quadrantPoint.x, quadrantPoint.y, 4, 0, 2 * pi);
+	ctx.stroke();
+
+	ctx.beginPath();
+	ctx.moveTo(quadrantPoint.x, quadrantPoint.y);
+	ctx.arc(quadrantPoint.x, quadrantPoint.y, 4, which * .5 * pi, which * pi);
+	ctx.closePath();
+	ctx.fill();
 }
