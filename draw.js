@@ -15,9 +15,12 @@ var ctx = canvas.getContext("2d");
 ctx.font = "16px Georgia";
 ctx.textAlign = "center";
 
-var r = 60;
+var r = 50;
 
 var pi = Math.PI;
+QUADRANT_SYMBOL_SIZE = 8;
+QUADRANT_RADIUS = 1.8;
+LABEL_RADIUS = 1.3;
 
 var pointSize = 4;
 
@@ -49,7 +52,7 @@ function drawPoint(pitch) {
 }
 
 function drawIntervalLabel(pitch, intervalLabel) {
-	var textPoint = getPoint(pitch, 1.3);
+	var textPoint = getPoint(pitch, LABEL_RADIUS);
 	ctx.fillText(intervalLabel, textPoint.x, textPoint.y + 5);
 }
 
@@ -206,15 +209,17 @@ function beatName(beatIndex) {
 }
 
 function drawQuadrant(pitch, which) {
-	var quadrantPoint = getPoint(pitch, 1.5);
+	var quadrantPoint = getPoint(pitch, QUADRANT_RADIUS);
+	var quarterCircle = .5 * pi;
+	var quadrant = which * quarterCircle;
 
 	ctx.beginPath();
-	ctx.arc(quadrantPoint.x, quadrantPoint.y, 4, 0, 2 * pi);
+	ctx.arc(quadrantPoint.x, quadrantPoint.y, QUADRANT_SYMBOL_SIZE, 0, 2 * pi);
 	ctx.stroke();
 
 	ctx.beginPath();
 	ctx.moveTo(quadrantPoint.x, quadrantPoint.y);
-	ctx.arc(quadrantPoint.x, quadrantPoint.y, 4, which * .5 * pi, which * pi);
+	ctx.arc(quadrantPoint.x, quadrantPoint.y, QUADRANT_SYMBOL_SIZE, quadrant, quadrant + quarterCircle);
 	ctx.closePath();
 	ctx.fill();
 }
