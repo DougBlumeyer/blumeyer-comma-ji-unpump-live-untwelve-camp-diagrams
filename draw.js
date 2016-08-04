@@ -1,7 +1,7 @@
 var canvas = document.getElementById("canvas");
 
-var windowWidth = 300;
-var windowHeight = 300;
+var windowWidth = 200;
+var windowHeight = 200;
 
 canvas.width  = windowWidth;
 canvas.height = windowHeight;
@@ -10,14 +10,23 @@ var circleCenterX = windowWidth / 2;
 var circleCenterY = windowHeight / 2;
 
 var ctx = canvas.getContext("2d");
-ctx.font="18px Georgia";
-ctx.textAlign="center";
+ctx.font = "16px Georgia";
+ctx.textAlign = "center";
+ctx.strokeStyle = "black";
+ctx.fillStyle = "black";
 
-var r = 100;
+var r = 60;
 
 var pi = Math.PI;
 
 var pointSize = 4;
+
+var voiceColors = {
+	"lead": "red",
+	"harm1": "blue",
+	"harm2": "green",
+	"bass": "brown"
+}
 
 function drawMainCircle() {
 	ctx.beginPath();
@@ -34,7 +43,7 @@ function drawPoint(pitch) {
 
 function drawIntervalLabel(pitch, intervalLabel) {
 	var textPoint = getPoint(pitch, 1.3);
-	ctx.fillText(intervalLabel, textPoint.x, textPoint.y + 9);
+	ctx.fillText(intervalLabel, textPoint.x, textPoint.y + 5);
 }
 
 function getPoint(pitch, scale = 1) {
@@ -105,19 +114,21 @@ var mapOfCentsToInterval = {
 	"360": "16/13"
 }
 
-function drawDiagram(pitchId, otherPitchIds) {
-	var pitch = pitchIdToCentsMap[pitchId];
-	var otherPitches = otherPitchIds.map(function(otherPitchId) {
-		return pitchIdToCentsMap[otherPitchId];
-	});
-
+function drawDiagram(pitchId, otherVoices) {
+	ctx.strokeStyle = "black";
+	ctx.fillStyle = "black";
+	var pitch = pitchIdToCentsMap[pitchId.class] + pitchId.octave * 1200;
 	drawPoint(pitch);
-	otherPitches.forEach(function(otherPitch) {
+
+	Object.keys(otherVoices).forEach(function(otherVoice) {
+		var otherPitchObj = otherVoices[otherVoice];
+		var otherPitch = pitchIdToCentsMap[otherPitchObj.class] + otherPitchObj.octave * 1200;
 		var pitchDifference = otherPitch - pitch;
 		var pitchDifferenceAsString = pitchDifference.toString();
 		var intervalLabel = mapOfCentsToInterval[pitchDifferenceAsString];
-
 		if (intervalLabel) {
+			ctx.strokeStyle = voiceColors[otherVoice];
+			ctx.fillStyle = voiceColors[otherVoice];
 			drawIntervalLabel(otherPitch, intervalLabel);
 			drawLine(pitch, otherPitch);
 			drawPoint(otherPitch);
@@ -134,9 +145,61 @@ function drawLine(pitch, otherPitch) {
 	ctx.stroke();
 }
 
-drawMainCircle();
-drawDiagram("o", ["i", "j", "k"]);
+var song = [
+	{
+		lead: {
+			class: "o",
+			octave: 3
+		},
+		harm1: {
+			class: "i",
+			octave: 3
+		},
+		harm2: {
+			class: "j",
+			octave: 3
+		},
+		bass: {
+			class: "k",
+			octave: 3
+		}
+	}
+];
 
-canvas.toBlob(function(blob) {
-  saveAs(blob, "whatever.png");
+var voiceNames = [
+	"lead",
+	"harm1",
+	"harm2",
+	"bass"
+];
+
+function reset() {
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	ctx.strokeStyle = "black";
+	ctx.fillStyle = "black";
+	drawMainCircle();
+}
+
+song.forEach(function(beat, beatIndex) {
+	voiceNames.forEach(function(voiceName) {
+		var voice = beat[voiceName];
+		var otherVoices = JSON.parse(JSON.stringify(beat));
+		delete otherVoices[voiceName];
+
+		console.log(voice)
+		console.log(otherVoices)
+
+		reset();
+
+		drawDiagram(voice, otherVoices);
+		canvas.toBlob(function(blob) {
+		  saveAs(blob, voiceName + "." + beatName(beatIndex) + ".png");
+		});
+	})
 });
+
+function beatName(beatIndex) {
+	var measureNumber = 1 + Math.floor(beatIndex / 4);
+	var beatNumber = 1 + beatIndex % 4;
+	return measureNumber + "." + beatNumber;
+}
