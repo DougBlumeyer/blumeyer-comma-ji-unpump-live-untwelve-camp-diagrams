@@ -1,6 +1,6 @@
 var canvas = document.getElementById("canvas");
 
-var windowWidth = window.innerWidth * .95; 
+var windowWidth = window.innerWidth * .95;
 var windowHeight = window.innerHeight * .95;
 
 canvas.width  = windowWidth;
@@ -33,7 +33,7 @@ function drawPoint(pitch) {
 function getPoint(pitch) {
 	var angle = mapCentsToRadians(pitch);
    	return {
-   		x: circleCenterX + r * Math.cos(angle), 
+   		x: circleCenterX + r * Math.cos(angle),
    		y: circleCenterY + r * Math.sin(angle)
    	};
 }
@@ -88,14 +88,6 @@ function drawLine(pitch, otherPitch) {
 drawMainCircle();
 drawDiagram("o", ["a", "b", "c"]);
 
-function saveCanvas() {
-  var imageData = canvas.toDataURL('image/jpeg', 1);
-  var formData = new FormData();
-  formData.append('fileData', imageData);
-  var xhr = new XMLHttpRequest();
-  xhr.addEventListener('load', function () { alert('uploaded!'); });
-  xhr.open('POST', "/stuff/upload", true);
-  xhr.send(formData);
-}
-
-saveCanvas();
+canvas.toBlob(function(blob) {
+    saveAs(blob, "whatever.png");
+});
