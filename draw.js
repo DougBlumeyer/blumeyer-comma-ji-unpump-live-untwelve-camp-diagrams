@@ -154,26 +154,26 @@ function drawLine(pitch, otherPitch) {
 	ctx.stroke();
 }
 
-var song = [
-	{
-		lead: {
-			class: "o",
-			octave: 3
-		},
-		harm1: {
-			class: "i",
-			octave: 3
-		},
-		harm2: {
-			class: "j",
-			octave: 3
-		},
-		bass: {
-			class: "k",
-			octave: 3
-		}
-	}
-];
+// var song = [
+// 	{
+// 		lead: {
+// 			class: "o",
+// 			octave: 3
+// 		},
+// 		harm1: {
+// 			class: "i",
+// 			octave: 3
+// 		},
+// 		harm2: {
+// 			class: "j",
+// 			octave: 3
+// 		},
+// 		bass: {
+// 			class: "k",
+// 			octave: 3
+// 		}
+// 	}
+// ];
 
 var voiceNames = [
 	"lead",
@@ -188,21 +188,6 @@ function reset() {
 	ctx.fillStyle = "black";
 	drawMainCircle();
 }
-
-song.forEach(function(beat, beatIndex) {
-	voiceNames.forEach(function(voiceName) {
-		var voice = beat[voiceName];
-		var otherVoices = JSON.parse(JSON.stringify(beat));
-		delete otherVoices[voiceName];
-
-		reset();
-
-		drawDiagram(voice, otherVoices);
-		canvas.toBlob(function(blob) {
-		  // saveAs(blob, voiceName + "." + beatName(beatIndex) + ".png");
-		});
-	})
-});
 
 function beatName(beatIndex) {
 	var measureNumber = 1 + Math.floor(beatIndex / 4);
@@ -226,11 +211,53 @@ function drawQuadrant(pitch, which) {
 	ctx.fill();
 }
 
+function parse(rawSongCsv) {
+	var output = [];
+	rawSongCsv.forEach(function(moment) {
+		var newMoment = {
+			lead: {
+				class: moment[0][0],
+				octave: moment[0][1]
+			},
+			harm1: {
+				class: moment[1][0],
+				octave: moment[1][1]
+			},
+			harm2: {
+				class: moment[2][0],
+				octave: moment[2][1]
+			},
+			bass: {
+				class: moment[3][0],
+				octave: moment[3][1]
+			}
+		};
+		output.push(newMoment);
+	});
+	return output;
+}
+
 getFileObject('song.csv', function (fileObject) {
 		var input = fileObject;
 		var config = {
 			complete: function(results) {
-				console.log(results);
+				// console.log(results)
+				var parsedResults = parse(results.data);
+				// console.log(parsedResults);
+				parsedResults.forEach(function(beat, beatIndex) {
+					voiceNames.forEach(function(voiceName) {
+						var voice = beat[voiceName];
+						var otherVoices = JSON.parse(JSON.stringify(beat));
+						delete otherVoices[voiceName];
+
+						reset();
+
+						drawDiagram(voice, otherVoices);
+						canvas.toBlob(function(blob) {
+						  saveAs(blob, voiceName + "." + beatName(beatIndex) + ".png");
+						});
+					})
+				});
 			}
 		};
 		Papa.parse(input, config);
