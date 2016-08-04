@@ -1,0 +1,19 @@
+{
+  "name": "blumeyer-comma-ji-unpump-live-untwelve-camp-diagrams",
+  "version": "1.0.0",
+  "description": "",
+  "main": "draw.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DougBlumeyer/blumeyer-comma-ji-unpump-live-untwelve-camp-diagrams.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DougBlumeyer/blumeyer-comma-ji-unpump-live-untwelve-camp-diagrams/issues"
+  },
+  "homepage": "https://github.com/DougBlumeyer/blumeyer-comma-ji-unpump-live-untwelve-camp-diagrams#readme"
+}

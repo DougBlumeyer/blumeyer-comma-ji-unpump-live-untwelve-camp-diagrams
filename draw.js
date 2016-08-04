@@ -199,7 +199,7 @@ song.forEach(function(beat, beatIndex) {
 
 		drawDiagram(voice, otherVoices);
 		canvas.toBlob(function(blob) {
-		  saveAs(blob, voiceName + "." + beatName(beatIndex) + ".png");
+		  // saveAs(blob, voiceName + "." + beatName(beatIndex) + ".png");
 		});
 	})
 });
@@ -225,3 +225,13 @@ function drawQuadrant(pitch, which) {
 	ctx.closePath();
 	ctx.fill();
 }
+
+getFileObject('song.csv', function (fileObject) {
+		var input = fileObject;
+		var config = {
+			complete: function(results) {
+				console.log(results);
+			}
+		};
+		Papa.parse(input, config);
+});
