@@ -128,12 +128,21 @@ function drawDiagram(pitchId, otherVoices) {
 	var pitch = pitchIdToCentsMap[pitchId.class];
 	drawPoint(pitch, POINT_SIZE);
 	var drew = false;
+	console.log("drawing a diagram", pitchId, otherVoices);
 	Object.keys(otherVoices).forEach(function(otherVoice) {
 		var otherPitchObj = otherVoices[otherVoice];
 		var otherPitch = pitchIdToCentsMap[otherPitchObj.class];
 		var pitchDifference = otherPitch - pitch;
+		while (pitchDifference < 0) {
+			pitchDifference += 1200;
+		}
+		while (pitchDifference > 1200) {
+			pitchDifference -= 1200;
+		}
+
 		var octaveDifference = otherPitchObj.octave - pitchId.octave;
 		var intervalLabel = mapCentsToInterval(pitchDifference, octaveDifference);
+		console.log("considering interval label for ", otherPitch, " vs home pitch ", pitch)
 		if (intervalLabel) {
 			drew = true;
 			drawIntervalLabel(otherPitch, intervalLabel);
@@ -176,6 +185,7 @@ function beatName(beatIndex) {
 }
 
 function drawQuadrant(pitch, which) {
+	console.log("drawing quadrant", which);
 	var quadrantPoint = getPoint(pitch, QUADRANT_RADIUS);
 	var quarterCircle = .5 * pi;
 	var quadrant = which * quarterCircle;
@@ -218,14 +228,14 @@ function parse(rawSongCsv) {
 }
 
 getFileObject('song.csv', function (fileObject) {
-		var input = fileObject;
-		var config = {
-			complete: function(results) {
-				var parsedResults = parse(results.data);
-				processSong(parsedResults, parsedResults.length, 0);
-			}
-		};
-		Papa.parse(input, config);
+	var input = fileObject;
+	var config = {
+		complete: function(results) {
+			var parsedResults = parse(results.data);
+			processSong(parsedResults, parsedResults.length, 0);
+		}
+	};
+	Papa.parse(input, config);
 });
 
 function processSong(parsedResults, songLength, beatIndex) {
@@ -239,6 +249,10 @@ function processVoices(beat, beatIndex, songLength, parsedResults, voiceIndex) {
 	var otherVoices = JSON.parse(JSON.stringify(beat));
 	delete otherVoices[voiceName];
 	reset();
+	if (voiceName + "." + beatName(beatIndex) == "lead.3.3") {
+		debugger;
+	}
+	console.log(voiceName + "." + beatName(beatIndex));
 	var shouldSave = drawDiagram(voice, otherVoices);
 	if (shouldSave) {
 		canvas.toBlob(function(blob) {
