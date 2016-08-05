@@ -48,9 +48,9 @@ function drawMainCircle() {
 
 function drawPoint(pitch, size) {
 	var point = getPoint(pitch, CIRCLE_RADIUS);
-  ctx.beginPath();
-  ctx.arc(point.x, point.y, size, 0, 2 * pi);
-  ctx.fill();
+	ctx.beginPath();
+	ctx.arc(point.x, point.y, size, 0, 2 * pi);
+	ctx.fill();
 }
 
 function drawIntervalLabel(pitch, intervalLabel) {
@@ -60,10 +60,10 @@ function drawIntervalLabel(pitch, intervalLabel) {
 
 function getPoint(pitch, radiusScalar) {
 	var angle = mapCentsToRadians(pitch);
-  return {
-   	x: circleCenter.x + r * Math.cos(angle) * radiusScalar,
-   	y: circleCenter.y + r * Math.sin(angle) * radiusScalar
-  };
+	return {
+		x: circleCenter.x + r * Math.cos(angle) * radiusScalar,
+		y: circleCenter.y + r * Math.sin(angle) * radiusScalar
+	};
 }
 
 function mapCentsToRadians(cents) {
@@ -91,58 +91,59 @@ var pitchIdToCentsMap = {
 	"a": 0
 };
 
-var mapOfCentsToInterval = {
-	"105": "17/16",
-	"298": "19/16",
-	"551": "11/8",
-	"841": "13/8",
-	"-105": "16/17",
-	"-298": "16/19",
-	"-551": "8/11",
-	"-841": "8/13",
-	"-1095": "17/32",
-	"-902": "19/32",
-	"-649": "11/16",
-	"-359": "13/16",
-	"1095": "32/17",
-	"902": "32/19",
-	"649": "16/11",
-	"359": "16/13",
-	"104": "17/16",
-	"297": "19/16",
-	"552": "11/8",
-	"840": "13/8",
-	"-104": "16/17",
-	"-297": "16/19",
-	"-552": "8/11",
-	"-840": "8/13",
-	"-1096": "17/32",
-	"-903": "19/32",
-	"-648": "11/16",
-	"-360": "13/16",
-	"1096": "32/17",
-	"903": "32/19",
-	"648": "16/11",
-	"360": "16/13"
+var mapOfIntervalIdByCentsToBaseHarmonicRatio = {
+	"105": { harmonic: "17", basePowerOfTwo: -4 },
+	"298": { harmonic: "19", basePowerOfTwo: -4 },
+	"552": { harmonic: "11", basePowerOfTwo: -3 },
+	"841": { harmonic: "13", basePowerOfTwo: -3 },
+	"1095": { harmonic: "17", basePowerOfTwo: 5 },
+	"902": { harmonic: "19", basePowerOfTwo: 5 },
+	"648": { harmonic: "11", basePowerOfTwo: 4 },
+	"359": { harmonic: "13", basePowerOfTwo: 4 },
+	"104": { harmonic: "17", basePowerOfTwo: -4 },
+	"297": { harmonic: "19", basePowerOfTwo: -4 },
+	"551": { harmonic: "11", basePowerOfTwo: -3 },
+	"840": { harmonic: "13", basePowerOfTwo: -3 },
+	"1096": { harmonic: "17", basePowerOfTwo: 5 },
+	"903": { harmonic: "19", basePowerOfTwo: 5 },
+	"649": { harmonic: "11", basePowerOfTwo: 4 },
+	"360": { harmonic: "13", basePowerOfTwo: 4 }
+}
+
+function mapCentsToInterval(pitchDifference, octaveDifference) {
+	var baseHarmonicRatio = mapOfIntervalIdByCentsToBaseHarmonicRatio[pitchDifference];
+	if (!baseHarmonicRatio) return false;
+
+	baseHarmonicRatio.basePowerOfTwo += octaveDifference;
+	var powerOfTwo = Math.pow(2, Math.abs(baseHarmonicRatio.basePowerOfTwo));
+
+	if (baseHarmonicRatio.basePowerOfTwo > 0) {
+		return baseHarmonicRatio.harmonic + "/" + powerOfTwo.toString();
+	} else {
+		return powerOfTwo.toString() + "/" + baseHarmonicRatio.harmonic;
+	}
 }
 
 function drawDiagram(pitchId, otherVoices) {
-	var pitch = pitchIdToCentsMap[pitchId.class] + pitchId.octave * 1200;
+	var pitch = pitchIdToCentsMap[pitchId.class];
 	drawPoint(pitch, POINT_SIZE);
-
+	var drew = false;
 	Object.keys(otherVoices).forEach(function(otherVoice) {
 		var otherPitchObj = otherVoices[otherVoice];
-		var otherPitch = pitchIdToCentsMap[otherPitchObj.class] + otherPitchObj.octave * 1200;
+		var otherPitch = pitchIdToCentsMap[otherPitchObj.class];
 		var pitchDifference = otherPitch - pitch;
-		var pitchDifferenceAsString = pitchDifference.toString();
-		var intervalLabel = mapOfCentsToInterval[pitchDifferenceAsString];
+		var octaveDifference = otherPitchObj.octave - pitchId.octave;
+		var intervalLabel = mapCentsToInterval(pitchDifference, octaveDifference);
 		if (intervalLabel) {
+			drew = true;
 			drawIntervalLabel(otherPitch, intervalLabel);
 			drawQuadrant(otherPitch, voiceQuadrants[otherVoice])
 			drawLine(pitch, otherPitch);
 			drawPoint(otherPitch, OTHER_POINT_SIZE);
 		}
 	});
+
+	return drew;
 }
 
 function drawLine(pitch, otherPitch) {
@@ -153,27 +154,6 @@ function drawLine(pitch, otherPitch) {
 	ctx.lineTo(otherPoint.x, otherPoint.y);
 	ctx.stroke();
 }
-
-// var song = [
-// 	{
-// 		lead: {
-// 			class: "o",
-// 			octave: 3
-// 		},
-// 		harm1: {
-// 			class: "i",
-// 			octave: 3
-// 		},
-// 		harm2: {
-// 			class: "j",
-// 			octave: 3
-// 		},
-// 		bass: {
-// 			class: "k",
-// 			octave: 3
-// 		}
-// 	}
-// ];
 
 var voiceNames = [
 	"lead",
@@ -241,24 +221,39 @@ getFileObject('song.csv', function (fileObject) {
 		var input = fileObject;
 		var config = {
 			complete: function(results) {
-				// console.log(results)
 				var parsedResults = parse(results.data);
-				// console.log(parsedResults);
-				parsedResults.forEach(function(beat, beatIndex) {
-					voiceNames.forEach(function(voiceName) {
-						var voice = beat[voiceName];
-						var otherVoices = JSON.parse(JSON.stringify(beat));
-						delete otherVoices[voiceName];
-
-						reset();
-
-						drawDiagram(voice, otherVoices);
-						canvas.toBlob(function(blob) {
-						  saveAs(blob, voiceName + "." + beatName(beatIndex) + ".png");
-						});
-					})
-				});
+				processSong(parsedResults, parsedResults.length, 0);
 			}
 		};
 		Papa.parse(input, config);
 });
+
+function processSong(parsedResults, songLength, beatIndex) {
+	var beat = parsedResults[beatIndex];
+	processVoices(beat, beatIndex, songLength, parsedResults, 0); 
+}
+
+function processVoices(beat, beatIndex, songLength, parsedResults, voiceIndex) {
+	var voiceName = voiceNames[voiceIndex];
+	var voice = beat[voiceName];
+	var otherVoices = JSON.parse(JSON.stringify(beat));
+	delete otherVoices[voiceName];
+	reset();
+	var shouldSave = drawDiagram(voice, otherVoices);
+	if (shouldSave) {
+		canvas.toBlob(function(blob) {
+			saveAs(blob, voiceName + "." + beatName(beatIndex) + ".png");
+			process(voiceIndex, beat, beatIndex, songLength, parsedResults);
+		});
+	} else {
+		process(voiceIndex, beat, beatIndex, songLength, parsedResults);
+	}
+}
+
+function process(voiceIndex, beat, beatIndex, songLength, parsedResults) {
+	if (voiceIndex < voiceNames.length - 1) {
+		processVoices(beat, beatIndex, songLength, parsedResults, voiceIndex + 1)
+	} else if (beatIndex < songLength - 1) {
+		processSong(parsedResults, songLength, beatIndex + 1)
+	}
+}
