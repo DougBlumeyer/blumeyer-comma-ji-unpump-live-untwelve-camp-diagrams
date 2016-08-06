@@ -14,6 +14,7 @@ var circleCenter = {
 var ctx = canvas.getContext("2d");
 ctx.font = "16px Georgia";
 ctx.textAlign = "center";
+ctx.lineWidth = 1;
 
 var r = 50;
 
@@ -158,10 +159,7 @@ function drawDiagram(pitchId, otherVoices) {
 function drawLine(pitch, otherPitch) {
 	var point = getPoint(pitch, CIRCLE_RADIUS);
 	var otherPoint = getPoint(otherPitch, CIRCLE_RADIUS);
-
-	ctx.moveTo(point.x, point.y);
-	ctx.lineTo(otherPoint.x, otherPoint.y);
-	ctx.stroke();
+	new Line(point.x, point.y, otherPoint.x, otherPoint.y).drawWithArrowheads(ctx);
 }
 
 var voiceNames = [
