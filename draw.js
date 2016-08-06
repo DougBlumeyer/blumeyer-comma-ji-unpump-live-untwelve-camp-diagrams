@@ -108,20 +108,24 @@ var mapOfIntervalIdByCentsToBaseHarmonicRatio = {
 	"1096": { harmonic: "17", basePowerOfTwo: 5 },
 	"903": { harmonic: "19", basePowerOfTwo: 5 },
 	"649": { harmonic: "11", basePowerOfTwo: 4 },
-	"360": { harmonic: "13", basePowerOfTwo: 4 }
+	"360": { harmonic: "13", basePowerOfTwo: 4 },
+	"0": { harmonic: "1", basePowerOfTwo: 0 },
+	"1": { harmonic: "1", basePowerOfTwo: 0 },
+	"-1": { harmonic: "1", basePowerOfTwo: 0 }, //TODO: ARE BOTH OF THESE NEEDED?
 }
 
 function mapCentsToInterval(pitchDifference, octaveDifference) {
 	var baseHarmonicRatio = mapOfIntervalIdByCentsToBaseHarmonicRatio[pitchDifference];
 	if (!baseHarmonicRatio) return false;
 
-	baseHarmonicRatio.basePowerOfTwo += octaveDifference;
-	var powerOfTwo = Math.pow(2, Math.abs(baseHarmonicRatio.basePowerOfTwo));
+	var powerOfTwo = baseHarmonicRatio.basePowerOfTwo + octaveDifference;
 
-	if (baseHarmonicRatio.basePowerOfTwo > 0) {
-		return baseHarmonicRatio.harmonic + ":" + powerOfTwo.toString();
+	var octaveAdjustment = Math.pow(2, Math.abs(powerOfTwo));
+
+	if (powerOfTwo < 0) {
+		return baseHarmonicRatio.harmonic + ":" + octaveAdjustment.toString();
 	} else {
-		return powerOfTwo.toString() + ":" + baseHarmonicRatio.harmonic;
+		return octaveAdjustment.toString() + ":" + baseHarmonicRatio.harmonic;
 	}
 }
 
@@ -129,21 +133,25 @@ function drawDiagram(pitchId, otherVoices) {
 	var pitch = pitchIdToCentsMap[pitchId.class];
 	drawPoint(pitch, POINT_SIZE);
 	var drew = false;
-	console.log("drawing a diagram", pitchId, otherVoices);
 	Object.keys(otherVoices).forEach(function(otherVoice) {
 		var otherPitchObj = otherVoices[otherVoice];
 		var otherPitch = pitchIdToCentsMap[otherPitchObj.class];
-		var pitchDifference = otherPitch - pitch;
-		while (pitchDifference < 0) {
+		var pitchDifference = pitch - otherPitch;
+
+		var octaveDifference = pitchId.octave - otherPitchObj.octave;
+
+		//means the other pitch's class is ABOVE the/my pitch's class
+		//w/in that weird organization of letters/nodes/classes w/in one octave of the tuning
+		//which means if the octave difference was nothing, this would be a move DOWNWARDS (FROM other TO me)
+		//which, because base powers of two in the object in this program assume slight upwards,
+		//it means that we should subtract one octave
+		//we can also think of it as canceling out / converting that octave into some extra cents
+		if (pitchDifference < 0) {
 			pitchDifference += 1200;
-		}
-		while (pitchDifference > 1200) {
-			pitchDifference -= 1200;
+			octaveDifference -= 1;
 		}
 
-		var octaveDifference = otherPitchObj.octave - pitchId.octave;
 		var intervalLabel = mapCentsToInterval(pitchDifference, octaveDifference);
-		console.log("considering interval label for ", otherPitch, " vs home pitch ", pitch)
 		if (intervalLabel) {
 			drew = true;
 			drawIntervalLabel(otherPitch, intervalLabel);
@@ -183,7 +191,6 @@ function beatName(beatIndex) {
 }
 
 function drawQuadrant(pitch, which) {
-	console.log("drawing quadrant", which);
 	var quadrantPoint = getPoint(pitch, QUADRANT_RADIUS);
 	var quarterCircle = .5 * pi;
 	var quadrant = which * quarterCircle;
@@ -238,7 +245,7 @@ getFileObject('song.csv', function (fileObject) {
 
 function processSong(parsedResults, songLength, beatIndex) {
 	var beat = parsedResults[beatIndex];
-	processVoices(beat, beatIndex, songLength, parsedResults, 0); 
+	processVoices(beat, beatIndex, songLength, parsedResults, 0);
 }
 
 function processVoices(beat, beatIndex, songLength, parsedResults, voiceIndex) {
@@ -247,10 +254,6 @@ function processVoices(beat, beatIndex, songLength, parsedResults, voiceIndex) {
 	var otherVoices = JSON.parse(JSON.stringify(beat));
 	delete otherVoices[voiceName];
 	reset();
-	if (voiceName + "." + beatName(beatIndex) == "lead.3.3") {
-		debugger;
-	}
-	console.log(voiceName + "." + beatName(beatIndex));
 	var shouldSave = drawDiagram(voice, otherVoices);
 	if (shouldSave) {
 		canvas.toBlob(function(blob) {
