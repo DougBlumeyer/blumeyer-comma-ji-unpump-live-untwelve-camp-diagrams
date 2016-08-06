@@ -119,9 +119,9 @@ function mapCentsToInterval(pitchDifference, octaveDifference) {
 	var powerOfTwo = Math.pow(2, Math.abs(baseHarmonicRatio.basePowerOfTwo));
 
 	if (baseHarmonicRatio.basePowerOfTwo > 0) {
-		return baseHarmonicRatio.harmonic + "/" + powerOfTwo.toString();
+		return baseHarmonicRatio.harmonic + ":" + powerOfTwo.toString();
 	} else {
-		return powerOfTwo.toString() + "/" + baseHarmonicRatio.harmonic;
+		return powerOfTwo.toString() + ":" + baseHarmonicRatio.harmonic;
 	}
 }
 
