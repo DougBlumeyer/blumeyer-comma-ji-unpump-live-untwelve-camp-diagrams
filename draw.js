@@ -129,11 +129,11 @@ function mapCentsToInterval(pitchDifference, octaveDifference) {
 	}
 }
 
-function drawDiagram(pitchId, otherVoices) {
+function drawDiagram(pitchId, otherVoices, comparison) {
 	var pitch = pitchIdToCentsMap[pitchId.class];
 	drawPoint(pitch, POINT_SIZE);
 	var drew = false;
-	Object.keys(otherVoices).forEach(function(otherVoice) {
+	Object.keys(otherVoices).forEach(function(otherVoice, otherVoiceIndex) {
 		var otherPitchObj = otherVoices[otherVoice];
 		var otherPitch = pitchIdToCentsMap[otherPitchObj.class];
 		var pitchDifference = pitch - otherPitch;
@@ -152,6 +152,11 @@ function drawDiagram(pitchId, otherVoices) {
 		}
 
 		var intervalLabel = mapCentsToInterval(pitchDifference, octaveDifference);
+
+		if (intervalLabel != comparison[otherVoiceIndex]) {
+			drew = "CALC ERROR; intervalLabel: " + intervalLabel + " don't equal comparison " + comparison[otherVoiceIndex];
+		}
+
 		if (intervalLabel) {
 			drew = true;
 			drawIntervalLabel(otherPitch, intervalLabel);
@@ -206,9 +211,9 @@ function drawQuadrant(pitch, which) {
 	ctx.fill();
 }
 
-function parse(rawSongCsv) {
+function parseSong(songFileParseResultData) {
 	var output = [];
-	rawSongCsv.forEach(function(moment) {
+	songFileParseResultData.forEach(function(moment) {
 		var newMoment = {
 			lead: {
 				class: moment[0][0],
@@ -232,43 +237,78 @@ function parse(rawSongCsv) {
 	return output;
 }
 
-getFileObject('song.csv', function (fileObject) {
-	var input = fileObject;
-	var config = {
-		complete: function(results) {
-			var parsedResults = parse(results.data);
-			processSong(parsedResults, parsedResults.length, 0);
+getFileObject('song.csv', function (songFile) {
+	var songFileConfig = {
+		complete: function(songFileParseResults) {
+			var parsedSongData = parseSong(songFileParseResults.data);
+			getFileObject('comparison.csv', function (comparisonFile) {
+				var comparisonFileConfig = {
+					complete: function(comparisonFileParseResults) {
+						processSong(parsedSongData, parsedSongData.length, 0, comparisonFileParseResults.data);
+					}
+				}
+				Papa.parse(comparisonFile, comparisonFileConfig);
+			});
 		}
 	};
-	Papa.parse(input, config);
+	Papa.parse(songFile, songFileConfig);
 });
 
-function processSong(parsedResults, songLength, beatIndex) {
-	var beat = parsedResults[beatIndex];
-	processVoices(beat, beatIndex, songLength, parsedResults, 0);
+function processSong(parsedSongData, songLength, beatIndex, parsedComparisonData) {
+	var beat = parsedSongData[beatIndex];
+	processVoices(beat, beatIndex, songLength, parsedSongData, 0, parsedComparisonData);
 }
 
-function processVoices(beat, beatIndex, songLength, parsedResults, voiceIndex) {
+function shallowCopy(object) {
+	return JSON.parse(JSON.stringify(object));
+}
+
+function getComparison(parsedComparisonData, beatIndex, voiceIndex) {
+	// console.log(parsedComparisonData);
+	// console.log(beatIndex);
+	// console.log(parsedComparisonData[beatIndex])
+	// console.log(voiceIndex)
+	// console.log(parsedComparisonData[beatIndex][voiceIndex * 3])
+	// debugger;
+	var comparison = [
+		parsedComparisonData[beatIndex][voiceIndex * 4],
+		parsedComparisonData[beatIndex][voiceIndex * 4 + 1],
+		parsedComparisonData[beatIndex][voiceIndex * 4 + 2],
+		parsedComparisonData[beatIndex][voiceIndex * 4 + 3]
+	];
+	// console.log(comparison);
+	return comparison;
+}
+
+function processVoices(beat, beatIndex, songLength, parsedSongData, voiceIndex, parsedComparisonData) {
 	var voiceName = voiceNames[voiceIndex];
 	var voice = beat[voiceName];
-	var otherVoices = JSON.parse(JSON.stringify(beat));
+	var otherVoices = shallowCopy(beat);
 	delete otherVoices[voiceName];
+
+	var comparison = getComparison(parsedComparisonData, beatIndex, voiceIndex);
+
 	reset();
-	var shouldSave = drawDiagram(voice, otherVoices);
+
+	var shouldSave = drawDiagram(voice, otherVoices, comparison);
+	if (shouldSave == "CALC ERROR") {
+		debugger;
+		console.log('error with' + voiceName + "." + beatName(beatIndex) + "; " + shouldSave);
+	}
 	if (shouldSave) {
 		canvas.toBlob(function(blob) {
 			saveAs(blob, voiceName + "." + beatName(beatIndex) + ".png");
-			process(voiceIndex, beat, beatIndex, songLength, parsedResults);
+			process(voiceIndex, beat, beatIndex, songLength, parsedSongData, parsedComparisonData);
 		});
 	} else {
-		process(voiceIndex, beat, beatIndex, songLength, parsedResults);
+		process(voiceIndex, beat, beatIndex, songLength, parsedSongData, parsedComparisonData);
 	}
 }
 
-function process(voiceIndex, beat, beatIndex, songLength, parsedResults) {
+function process(voiceIndex, beat, beatIndex, songLength, parsedSongData, parsedComparisonData) {
 	if (voiceIndex < voiceNames.length - 1) {
-		processVoices(beat, beatIndex, songLength, parsedResults, voiceIndex + 1)
+		processVoices(beat, beatIndex, songLength, parsedSongData, voiceIndex + 1, parsedComparisonData)
 	} else if (beatIndex < songLength - 1) {
-		processSong(parsedResults, songLength, beatIndex + 1)
+		processSong(parsedSongData, songLength, beatIndex + 1, parsedComparisonData)
 	}
 }
