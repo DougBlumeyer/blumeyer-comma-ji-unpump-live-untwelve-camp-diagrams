@@ -32,19 +32,44 @@ var voiceColors = {
 	"harm1": "blue",
 	"harm2": "green",
 	"bass": "brown"
-}
+};
 
 var voiceQuadrants = {
 	"lead" : 1,
 	"harm1": 2,
 	"harm2": 3,
 	"bass": 4
-}
+};
+
+var pitchIdToCentsMap = {
+	"j": 1138,
+	"n": 954,
+	"i": 945,
+	"h": 849,
+	"c": 841,
+	"g": 656,
+	"p": 594,
+	"r": 587,
+	"b": 551,
+	"m": 489,
+	"k": 402,
+	"e": 298,
+	"l": 297,
+	"f": 192,
+	"d": 105,
+	"o": 43,
+	"q": 8,
+	"a": 0
+};
 
 function drawMainCircle() {
 	ctx.beginPath();
 	ctx.arc(circleCenter.x, circleCenter.y, r, 0, 2 * pi);
 	ctx.stroke();
+
+	Object.keys(pitchIdToCentsMap).forEach(function(pitchId) {
+		drawPoint(pitchIdToCentsMap[pitchId], 2);
+	});
 }
 
 function drawPoint(pitch, size) {
@@ -70,27 +95,6 @@ function getPoint(pitch, radiusScalar) {
 function mapCentsToRadians(cents) {
 	return cents / 1200 * 2 * pi;
 }
-
-var pitchIdToCentsMap = {
-	"j": 1138,
-	"n": 954,
-	"i": 945,
-	"h": 849,
-	"c": 841,
-	"g": 656,
-	"p": 594,
-	"r": 587,
-	"b": 551,
-	"m": 489,
-	"k": 402,
-	"e": 298,
-	"l": 297,
-	"f": 192,
-	"d": 105,
-	"o": 43,
-	"q": 8,
-	"a": 0
-};
 
 var mapOfIntervalIdByCentsToBaseHarmonicRatio = {
 	"105": { harmonic: "17", basePowerOfTwo: -4 },
@@ -129,7 +133,7 @@ function mapCentsToInterval(pitchDifference, octaveDifference) {
 	}
 }
 
-function drawDiagram(pitchId, otherVoices, comparison) {
+function drawDiagram(pitchId, otherVoices, comparison) {	
 	var pitch = pitchIdToCentsMap[pitchId.class];
 	drawPoint(pitch, POINT_SIZE);
 	var drew = false;
