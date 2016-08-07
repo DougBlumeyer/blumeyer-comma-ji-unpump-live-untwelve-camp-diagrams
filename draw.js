@@ -62,8 +62,8 @@ function drawIntervalLabel(pitch, intervalLabel) {
 function getPoint(pitch, radiusScalar) {
 	var angle = mapCentsToRadians(pitch);
 	return {
-		x: circleCenter.x + r * Math.cos(angle) * radiusScalar,
-		y: circleCenter.y + r * Math.sin(angle) * radiusScalar
+		x: circleCenter.x + r * Math.cos(angle + pi) * radiusScalar,
+		y: circleCenter.y + r * Math.sin(angle + pi) * radiusScalar
 	};
 }
 
